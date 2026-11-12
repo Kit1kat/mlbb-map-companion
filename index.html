@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>MLBB Map Companion</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#151f30;--muted:#9eacc0;--line:#29364a;--blue:#48a7ff;--red:#ff626d;--gold:#ffc857}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#eef4ff;font:15px system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+header{padding:18px 4px 12px}h1{font-size:22px;margin:0}header p{margin:5px 0;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:8px;margin:8px 0 14px}.tab{flex:1;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:#dce8fa}.tab.active{border-color:var(--blue);background:#18304a}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+h2{font-size:16px;margin:0 0 12px}.map{position:relative;aspect-ratio:1/1;border-radius:13px;overflow:hidden;background:linear-gradient(135deg,#1c493d,#254b39 48%,#173e36);border:1px solid #52725c;touch-action:manipulation}
+.map:before,.map:after{content:"";position:absolute;background:#b5a47a55;border:8px solid #b5a47a33;border-radius:50%;width:74%;height:74%;left:9%;top:9%;transform:rotate(45deg)}
+.map:after{width:46%;height:46%;left:27%;top:27%;border-width:6px;transform:rotate(-45deg)}
+.lane{position:absolute;height:12px;background:#b6a77b;opacity:.65;transform-origin:left center;border-radius:20px;z-index:1}
+.l1{width:118%;left:-7%;top:50%;transform:rotate(-43deg)}.l2{width:118%;left:-7%;top:50%;transform:rotate(43deg)}.l3{width:100%;left:0;top:50%;height:7px}
+.river{position:absolute;z-index:2;width:100%;height:17px;top:47%;background:#3987a9;transform:rotate(-43deg);opacity:.85}
+.base{position:absolute;z-index:3;width:24px;height:24px;border-radius:50%;background:#4ba5ff;border:3px solid #d9efff;left:8%;bottom:8%;box-shadow:0 0 14px #4ba5ff}.base.enemy{left:auto;bottom:auto;right:8%;top:8%;background:#ff626d}
+.object{position:absolute;z-index:4;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#192b30;border:2px solid var(--gold);font-size:15px}
+.turtle{left:48%;top:24%}.lord{right:24%;bottom:22%}
+.marker{position:absolute;z-index:5;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#a92536;border:2px solid #ffd3d6;font-weight:800;box-shadow:0 2px 8px #0008}
+.hint{font-size:12px;color:var(--muted);margin:9px 2px 0}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.timer{font-size:25px;font-weight:750;font-variant-numeric:tabular-nums}.muted{color:var(--muted);font-size:12px}
+button{border:0;border-radius:11px;padding:11px 13px;background:#24476a;color:white;font-weight:650;font-size:14px}button.secondary{background:#293447}button.danger{background:#71303b}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.timergrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.timerbox{background:#101a29;border:1px solid var(--line);border-radius:12px;padding:12px}
+#log{max-height:150px;overflow:auto;font-size:13px;color:#d6e2f2}.logitem{padding:7px 0;border-bottom:1px solid var(--line)}
+.hidden{display:none}input{width:78px;background:#0d1725;border:1px solid var(--line);border-radius:8px;color:white;padding:8px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:10px 0 22px}
+</style>
+</head>
+<body>
+<header><h1>MLBB Map Companion</h1><p>Тактический помощник · локальная версия для iPhone</p></header>
+<div class="tabs"><button class="tab active" data-tab="mapview">Карта</button><button class="tab" data-tab="timerview">Таймеры</button><button class="tab" data-tab="historyview">Журнал</button></div>
+<section id="mapview">
+<div class="panel"><div class="row"><h2>Поле боя</h2><span class="muted">Нажми на карту, чтобы отметить врага</span></div>
+<div class="map" id="map"><div class="lane l1"></div><div class="lane l2"></div><div class="lane l3"></div><div class="river"></div><div class="base"></div><div class="base enemy"></div><div class="object turtle">🐢</div><div class="object lord">🐉</div></div>
+<p class="hint">Схематичная карта для ручных отметок. Она не считывает данные из матча и не показывает скрытых противников.</p>
+<div class="actions"><button id="undo" class="secondary">Отменить отметку</button><button id="clear" class="danger">Очистить карту</button></div></div>
+<div class="panel"><h2>Последние отметки</h2><div id="recent" class="muted">Пока отметок нет.</div></div>
+</section>
+<section id="timerview" class="hidden">
+<div class="panel"><h2>Объекты</h2><div class="timergrid">
+<div class="timerbox"><div>🐢 Turtle</div><div class="timer" id="turtleTime">—:—</div><div class="muted" id="turtleState">Не запущен</div><div class="actions"><button onclick="startTimer('turtle',120)">Появился</button><button class="secondary" onclick="resetTimer('turtle')">Сброс</button></div></div>
+<div class="timerbox"><div>🐉 Lord</div><div class="timer" id="lordTime">—:—</div><div class="muted" id="lordState">Не запущен</div><div class="actions"><button onclick="startTimer('lord',180)">Появился</button><button class="secondary" onclick="resetTimer('lord')">Сброс</button></div></div>
+</div><p class="hint">Стартуй таймер вручную после появления объекта. Время здесь — настраиваемая базовая длительность, проверь актуальные правила текущего патча.</p></div>
+<div class="panel"><h2>Настройка длительности</h2><div class="row"><label for="turtleDuration">Turtle, секунд</label><input id="turtleDuration" type="number" min="10" value="120"></div><div class="row" style="margin-top:9px"><label for="lordDuration">Lord, секунд</label><input id="lordDuration" type="number" min="10" value="180"></div><p class="hint">Изменения применяются при следующем запуске таймера.</p></div>
+</section>
+<section id="historyview" class="hidden"><div class="panel"><div class="row"><h2>Журнал событий</h2><button class="secondary" id="clearlog">Очистить</button></div><div id="log">Событий пока нет.</div></div></section>
+<footer>Неофициальный фанатский инструмент. Не связан с Moonton.</footer>
+<script>
+const $=id=>document.getElementById(id);let marks=[];let timers={turtle:null,lord:null};let events=[];
+function log(msg){events.unshift(new Date().toLocaleTimeString('ru-RU')+' — '+msg);events=events.slice(0,100);$('log').innerHTML=events.map(x=>'<div class="logitem">'+x+'</div>').join('');}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['mapview','timerview','historyview'].forEach(id=>$(id).classList.toggle('hidden',id!==b.dataset.tab));});
+$('map').addEventListener('click',e=>{if(e.target.closest('.object'))return;const r=$('map').getBoundingClientRect();const m={x:(e.clientX-r.left)/r.width*100,y:(e.clientY-r.top)/r.height*100,t:Date.now()};marks.push(m);renderMarks();log('Отмечен противник на карте');});
+function renderMarks(){document.querySelectorAll('.marker').forEach(x=>x.remove());marks.forEach((m,i)=>{const el=document.createElement('div');el.className='marker';el.textContent='!';el.style.left=m.x+'%';el.style.top=m.y+'%';el.title='Отметка '+(i+1);$('map').append(el);});$('recent').textContent=marks.length?`Отметок: ${marks.length}. Последняя — ${new Date(marks.at(-1).t).toLocaleTimeString('ru-RU')}`:'Пока отметок нет.';}
+$('undo').onclick=()=>{marks.pop();renderMarks();};$('clear').onclick=()=>{marks=[];renderMarks();log('Отметки очищены');};
+function startTimer(name,defaultSeconds){const input=$(name+'Duration');const seconds=Math.max(10,Number(input.value)||defaultSeconds);timers[name]={end:Date.now()+seconds*1000};log(name==='turtle'?'Запущен таймер Turtle':'Запущен таймер Lord');}
+function resetTimer(name){timers[name]=null;$(name+'Time').textContent='—:—';$(name+'State').textContent='Не запущен';log('Сброшен таймер '+name);}
+function tick(){for(const n of ['turtle','lord']){const t=timers[n];if(!t)continue;const left=Math.max(0,Math.ceil((t.end-Date.now())/1000));$(n+'Time').textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');$(n+'State').textContent=left?'До конца отсчёта':'Время вышло';if(left===0&&!t.done){t.done=true;log((n==='turtle'?'Turtle':'Lord')+': таймер завершён');if(navigator.vibrate)navigator.vibrate([250,100,250]);}}}
+setInterval(tick,250);$('clearlog').onclick=()=>{events=[];$('log').textContent='Событий пока нет.';};
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
