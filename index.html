@@ -1,66 +1,872 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101827">
-<link rel="manifest" href="manifest.webmanifest">
-<title>MLBB Map Companion</title>
-<style>
-:root{color-scheme:dark;--bg:#0b1220;--panel:#151f30;--muted:#9eacc0;--line:#29364a;--blue:#48a7ff;--red:#ff626d;--gold:#ffc857}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#eef4ff;font:15px system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
-header{padding:18px 4px 12px}h1{font-size:22px;margin:0}header p{margin:5px 0;color:var(--muted);font-size:13px}
-.tabs{display:flex;gap:8px;margin:8px 0 14px}.tab{flex:1;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:#dce8fa}.tab.active{border-color:var(--blue);background:#18304a}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-h2{font-size:16px;margin:0 0 12px}.map{position:relative;aspect-ratio:1/1;border-radius:13px;overflow:hidden;background:linear-gradient(135deg,#1c493d,#254b39 48%,#173e36);border:1px solid #52725c;touch-action:manipulation}
-.map:before,.map:after{content:"";position:absolute;background:#b5a47a55;border:8px solid #b5a47a33;border-radius:50%;width:74%;height:74%;left:9%;top:9%;transform:rotate(45deg)}
-.map:after{width:46%;height:46%;left:27%;top:27%;border-width:6px;transform:rotate(-45deg)}
-.lane{position:absolute;height:12px;background:#b6a77b;opacity:.65;transform-origin:left center;border-radius:20px;z-index:1}
-.l1{width:118%;left:-7%;top:50%;transform:rotate(-43deg)}.l2{width:118%;left:-7%;top:50%;transform:rotate(43deg)}.l3{width:100%;left:0;top:50%;height:7px}
-.river{position:absolute;z-index:2;width:100%;height:17px;top:47%;background:#3987a9;transform:rotate(-43deg);opacity:.85}
-.base{position:absolute;z-index:3;width:24px;height:24px;border-radius:50%;background:#4ba5ff;border:3px solid #d9efff;left:8%;bottom:8%;box-shadow:0 0 14px #4ba5ff}.base.enemy{left:auto;bottom:auto;right:8%;top:8%;background:#ff626d}
-.object{position:absolute;z-index:4;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#192b30;border:2px solid var(--gold);font-size:15px}
-.turtle{left:48%;top:24%}.lord{right:24%;bottom:22%}
-.marker{position:absolute;z-index:5;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#a92536;border:2px solid #ffd3d6;font-weight:800;box-shadow:0 2px 8px #0008}
-.hint{font-size:12px;color:var(--muted);margin:9px 2px 0}
-.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.timer{font-size:25px;font-weight:750;font-variant-numeric:tabular-nums}.muted{color:var(--muted);font-size:12px}
-button{border:0;border-radius:11px;padding:11px 13px;background:#24476a;color:white;font-weight:650;font-size:14px}button.secondary{background:#293447}button.danger{background:#71303b}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.timergrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.timerbox{background:#101a29;border:1px solid var(--line);border-radius:12px;padding:12px}
-#log{max-height:150px;overflow:auto;font-size:13px;color:#d6e2f2}.logitem{padding:7px 0;border-bottom:1px solid var(--line)}
-.hidden{display:none}input{width:78px;background:#0d1725;border:1px solid var(--line);border-radius:8px;color:white;padding:8px}
-footer{text-align:center;color:var(--muted);font-size:11px;padding:10px 0 22px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07131d">
+  <meta name="description" content="MLBB Map Companion — удобный помощник для карты, таймеров и заметок в Mobile Legends: Bang Bang.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>MLBB Map Companion</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07131d;
+      --bg-alt: #0d1b2b;
+      --panel: rgba(15, 28, 40, 0.9);
+      --panel-strong: #101d2d;
+      --muted: #9fb4c9;
+      --line: rgba(148, 177, 220, 0.18);
+      --blue: #48a7ff;
+      --blue-soft: rgba(72, 167, 255, 0.15);
+      --red: #ff626d;
+      --gold: #ffc857;
+      --green: #50d890;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(72, 167, 255, 0.18), transparent 44%),
+        linear-gradient(180deg, #06121b 0%, #0a1725 50%, #091722 100%);
+      color: #edf5ff;
+      font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px 0 16px;
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(12px);
+      background: rgba(7, 19, 29, 0.6);
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), #6dd8ff);
+      box-shadow: 0 10px 30px rgba(72, 167, 255, 0.4);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: 0.2s ease;
+      font-size: 14px;
+    }
+
+    .nav a:hover,
+    .nav a:focus-visible {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .install-btn {
+      border: 1px solid rgba(72, 167, 255, 0.35);
+      background: linear-gradient(135deg, rgba(72, 167, 255, 0.15), rgba(72, 167, 255, 0.05));
+      color: #eff8ff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      padding: 40px 0 24px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(72, 167, 255, 0.08);
+      border: 1px solid rgba(72, 167, 255, 0.2);
+      color: #bfe2ff;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.06em;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    button,
+    .tab {
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform .2s ease, opacity .2s ease;
+    }
+
+    .primary-btn, button:not(.tab):not(.secondary) {
+      background: linear-gradient(135deg, var(--blue), #7ebdff);
+      color: #06141e;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(72, 167, 255, 0.35);
+    }
+
+    .primary-btn {
+      padding: 14px 18px;
+      font-size: 15px;
+    }
+
+    .secondary-btn {
+      background: rgba(255, 255, 255, 0.04);
+      color: #edf5ff;
+      border: 1px solid var(--line);
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .primary-btn:hover,
+    .secondary-btn:hover,
+    button:hover,
+    .tab:hover {
+      transform: translateY(-1px);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.6rem;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .preview-card {
+      background: linear-gradient(180deg, rgba(17, 31, 45, 0.98), rgba(9, 21, 31, 0.98));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .mini-map {
+      position: relative;
+      margin-top: 18px;
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1f5240, #254c3b 48%, #173a2f);
+      border: 1px solid rgba(120, 164, 130, 0.4);
+    }
+
+    .mini-map::before,
+    .mini-map::after {
+      content: "";
+      position: absolute;
+      background: rgba(181, 164, 122, 0.62);
+      border: 8px solid rgba(181, 164, 122, 0.25);
+      border-radius: 50%;
+      width: 72%;
+      height: 72%;
+      left: 14%;
+      top: 14%;
+      transform: rotate(45deg);
+    }
+
+    .mini-map::after {
+      width: 44%;
+      height: 44%;
+      left: 28%;
+      top: 28%;
+      border-width: 6px;
+      transform: rotate(-45deg);
+    }
+
+    .mini-base {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #4ba5ff;
+      border: 2px solid #dfefff;
+      left: 10%;
+      bottom: 10%;
+      box-shadow: 0 0 12px #4ba5ff;
+    }
+
+    .mini-base.enemy {
+      left: auto;
+      right: 10%;
+      bottom: auto;
+      top: 10%;
+      background: #f65a6d;
+      border-color: #ffe6f0;
+      box-shadow: 0 0 12px rgba(246, 90, 109, 0.8);
+    }
+
+    .mini-lane {
+      position: absolute;
+      height: 8px;
+      background: rgba(180, 170, 128, 0.7);
+      border-radius: 20px;
+      left: -6%;
+      top: 50%;
+      width: 112%;
+      transform: rotate(-42deg);
+    }
+
+    .mini-lane.second { transform: rotate(42deg); }
+    .mini-lane.third { width: 100%; left: 0; top: 50%; transform: none; }
+
+    .mini-river {
+      position: absolute;
+      width: 100%;
+      height: 12px;
+      top: 45%;
+      left: 0;
+      background: rgba(57, 135, 169, 0.9);
+      transform: rotate(-42deg);
+    }
+
+    .main-shell {
+      margin-top: 36px;
+      background: rgba(9, 20, 28, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 18px 18px 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0 18px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 110px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      color: #dce8fa;
+      border: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: rgba(72, 167, 255, 0.12);
+      border-color: rgba(72, 167, 255, 0.7);
+      color: #f3fbff;
+      box-shadow: inset 0 0 0 1px rgba(72, 167, 255, 0.1);
+    }
+
+    section {
+      display: block;
+    }
+
+    .hidden { display: none !important; }
+
+    .panel {
+      background: rgba(12, 21, 31, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin: 0 0 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .map {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1b493d, #254b39 48%, #183e36);
+      border: 1px solid rgba(116, 168, 132, 0.36);
+      margin-top: 10px;
+    }
+
+    .map:before,
+    .map:after {
+      content: "";
+      position: absolute;
+      background: rgba(181, 164, 122, 0.6);
+      border: 8px solid rgba(181, 164, 122, 0.2);
+      border-radius: 50%;
+      width: 74%;
+      height: 74%;
+      left: 13%;
+      top: 13%;
+      transform: rotate(45deg);
+    }
+
+    .map:after {
+      width: 46%;
+      height: 46%;
+      left: 27%;
+      top: 27%;
+      border-width: 6px;
+      transform: rotate(-45deg);
+    }
+
+    .lane {
+      position: absolute;
+      height: 12px;
+      background: rgba(182, 167, 123, 0.72);
+      opacity: 0.8;
+      transform-origin: left center;
+      border-radius: 18px;
+      z-index: 1;
+    }
+
+    .l1 { width: 118%; left: -7%; top: 50%; transform: rotate(-43deg); }
+    .l2 { width: 118%; left: -7%; top: 50%; transform: rotate(43deg); }
+    .l3 { width: 100%; left: 0; top: 50%; height: 7px; }
+    .river {
+      position: absolute;
+      z-index: 2;
+      width: 100%;
+      height: 17px;
+      top: 47%;
+      background: rgba(57, 135, 169, 0.8);
+      transform: rotate(-43deg);
+      opacity: 0.9;
+    }
+
+    .base {
+      position: absolute;
+      z-index: 3;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #4ba5ff;
+      border: 3px solid #d9efff;
+      left: 8%;
+      bottom: 8%;
+      box-shadow: 0 0 14px #4ba5ff;
+    }
+
+    .base.enemy {
+      left: auto;
+      right: 8%;
+      bottom: auto;
+      top: 8%;
+      background: #ff5d71;
+      border-color: #ffd9de;
+      box-shadow: 0 0 14px rgba(255, 93, 113, 0.9);
+    }
+
+    .object {
+      position: absolute;
+      z-index: 4;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(25, 43, 48, 0.9);
+      border: 2px solid var(--gold);
+      font-size: 15px;
+    }
+
+    .turtle { left: 48%; top: 24%; }
+    .lord { right: 24%; bottom: 22%; }
+
+    .marker {
+      position: absolute;
+      z-index: 5;
+      transform: translate(-50%, -50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #a92536;
+      border: 2px solid #ffd3d6;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 12px 18px rgba(169, 37, 54, 0.35);
+    }
+
+    .hint {
+      margin: 12px 2px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      padding: 11px 13px;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      background: #24476a;
+    }
+
+    button.secondary { background: #293447; }
+    button.danger { background: #71303b; }
+
+    .timergrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .timerbox {
+      background: rgba(16, 25, 35, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .timer {
+      font-size: clamp(1.5rem, 2vw, 2.2rem);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      margin: 10px 0 4px;
+    }
+
+    input {
+      width: 92px;
+      background: rgba(8, 18, 27, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: white;
+      padding: 9px 10px;
+      font: inherit;
+    }
+
+    .settings {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .settings label {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #log {
+      max-height: 182px;
+      overflow: auto;
+      font-size: 13px;
+      color: #dfeaf8;
+      padding-right: 6px;
+    }
+
+    .logitem {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    footer {
+      padding: 26px 0 38px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 820px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-wrap: wrap;
+      }
+
+      .nav {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .timergrid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-<header><h1>MLBB Map Companion</h1><p>Тактический помощник · локальная версия для iPhone</p></header>
-<div class="tabs"><button class="tab active" data-tab="mapview">Карта</button><button class="tab" data-tab="timerview">Таймеры</button><button class="tab" data-tab="historyview">Журнал</button></div>
-<section id="mapview">
-<div class="panel"><div class="row"><h2>Поле боя</h2><span class="muted">Нажми на карту, чтобы отметить врага</span></div>
-<div class="map" id="map"><div class="lane l1"></div><div class="lane l2"></div><div class="lane l3"></div><div class="river"></div><div class="base"></div><div class="base enemy"></div><div class="object turtle">🐢</div><div class="object lord">🐉</div></div>
-<p class="hint">Схематичная карта для ручных отметок. Она не считывает данные из матча и не показывает скрытых противников.</p>
-<div class="actions"><button id="undo" class="secondary">Отменить отметку</button><button id="clear" class="danger">Очистить карту</button></div></div>
-<div class="panel"><h2>Последние отметки</h2><div id="recent" class="muted">Пока отметок нет.</div></div>
-</section>
-<section id="timerview" class="hidden">
-<div class="panel"><h2>Объекты</h2><div class="timergrid">
-<div class="timerbox"><div>🐢 Turtle</div><div class="timer" id="turtleTime">—:—</div><div class="muted" id="turtleState">Не запущен</div><div class="actions"><button onclick="startTimer('turtle',120)">Появился</button><button class="secondary" onclick="resetTimer('turtle')">Сброс</button></div></div>
-<div class="timerbox"><div>🐉 Lord</div><div class="timer" id="lordTime">—:—</div><div class="muted" id="lordState">Не запущен</div><div class="actions"><button onclick="startTimer('lord',180)">Появился</button><button class="secondary" onclick="resetTimer('lord')">Сброс</button></div></div>
-</div><p class="hint">Стартуй таймер вручную после появления объекта. Время здесь — настраиваемая базовая длительность, проверь актуальные правила текущего патча.</p></div>
-<div class="panel"><h2>Настройка длительности</h2><div class="row"><label for="turtleDuration">Turtle, секунд</label><input id="turtleDuration" type="number" min="10" value="120"></div><div class="row" style="margin-top:9px"><label for="lordDuration">Lord, секунд</label><input id="lordDuration" type="number" min="10" value="180"></div><p class="hint">Изменения применяются при следующем запуске таймера.</p></div>
-</section>
-<section id="historyview" class="hidden"><div class="panel"><div class="row"><h2>Журнал событий</h2><button class="secondary" id="clearlog">Очистить</button></div><div id="log">Событий пока нет.</div></div></section>
-<footer>Неофициальный фанатский инструмент. Не связан с Moonton.</footer>
-<script>
-const $=id=>document.getElementById(id);let marks=[];let timers={turtle:null,lord:null};let events=[];
-function log(msg){events.unshift(new Date().toLocaleTimeString('ru-RU')+' — '+msg);events=events.slice(0,100);$('log').innerHTML=events.map(x=>'<div class="logitem">'+x+'</div>').join('');}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['mapview','timerview','historyview'].forEach(id=>$(id).classList.toggle('hidden',id!==b.dataset.tab));});
-$('map').addEventListener('click',e=>{if(e.target.closest('.object'))return;const r=$('map').getBoundingClientRect();const m={x:(e.clientX-r.left)/r.width*100,y:(e.clientY-r.top)/r.height*100,t:Date.now()};marks.push(m);renderMarks();log('Отмечен противник на карте');});
-function renderMarks(){document.querySelectorAll('.marker').forEach(x=>x.remove());marks.forEach((m,i)=>{const el=document.createElement('div');el.className='marker';el.textContent='!';el.style.left=m.x+'%';el.style.top=m.y+'%';el.title='Отметка '+(i+1);$('map').append(el);});$('recent').textContent=marks.length?`Отметок: ${marks.length}. Последняя — ${new Date(marks.at(-1).t).toLocaleTimeString('ru-RU')}`:'Пока отметок нет.';}
-$('undo').onclick=()=>{marks.pop();renderMarks();};$('clear').onclick=()=>{marks=[];renderMarks();log('Отметки очищены');};
-function startTimer(name,defaultSeconds){const input=$(name+'Duration');const seconds=Math.max(10,Number(input.value)||defaultSeconds);timers[name]={end:Date.now()+seconds*1000};log(name==='turtle'?'Запущен таймер Turtle':'Запущен таймер Lord');}
-function resetTimer(name){timers[name]=null;$(name+'Time').textContent='—:—';$(name+'State').textContent='Не запущен';log('Сброшен таймер '+name);}
-function tick(){for(const n of ['turtle','lord']){const t=timers[n];if(!t)continue;const left=Math.max(0,Math.ceil((t.end-Date.now())/1000));$(n+'Time').textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');$(n+'State').textContent=left?'До конца отсчёта':'Время вышло';if(left===0&&!t.done){t.done=true;log((n==='turtle'?'Turtle':'Lord')+': таймер завершён');if(navigator.vibrate)navigator.vibrate([250,100,250]);}}}
-setInterval(tick,250);$('clearlog').onclick=()=>{events=[];$('log').textContent='Событий пока нет.';};
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-</script>
-</body></html>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">M</div>
+        <span>MLBB Map Companion</span>
+      </div>
+      <nav class="nav" aria-label="Основная навигация">
+        <a href="#map-app">Карта</a>
+        <a href="#timers">Таймеры</a>
+        <a href="#log-panel">Журнал</a>
+        <a href="#install">Установка</a>
+      </nav>
+      <a class="install-btn" href="#install">На главный экран</a>
+    </header>
+
+    <main>
+      <section class="hero" aria-label="Описание проекта">
+        <div>
+          <div class="eyebrow">PWA • iPhone • локальный помощник</div>
+          <h1>Лёгкий тактический помощник для матчей.</h1>
+          <p class="lead">
+            Отмечайте важные точки на схематической карте, следите за таймерами лесных боссов и храните события в кратком журнале — всё прямо в браузере на iPhone без установки отдельного приложения.
+          </p>
+          <div class="cta-row">
+            <a class="primary-btn" href="#map-app">Открыть карту</a>
+            <a class="secondary-btn" href="#install">Как добавить на экран</a>
+          </div>
+
+          <div class="stats" aria-label="Плюсы сервиса">
+            <div class="stat">
+              <strong>3</strong>
+              <span>вкладки: карта, таймеры, журнал</span>
+            </div>
+            <div class="stat">
+              <strong>∞</strong>
+              <span>лаконичный рабочий процесс на одном экране</span>
+            </div>
+            <div class="stat">
+              <strong>PWA</strong>
+              <span>можно открыть как приложение с домашнего экрана</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-card">
+          <div class="row">
+            <h2>Превью карты</h2>
+            <span class="muted">Локальная версия</span>
+          </div>
+          <div class="mini-map" aria-hidden="true">
+            <div class="mini-lane"></div>
+            <div class="mini-lane second"></div>
+            <div class="mini-lane third"></div>
+            <div class="mini-river"></div>
+            <div class="mini-base"></div>
+            <div class="mini-base enemy"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="map-app" class="main-shell" aria-label="Внутреннее приложение">
+        <div class="tabs" role="tablist" aria-label="Вкладки приложения">
+          <button class="tab active" data-tab="mapview" role="tab" aria-selected="true">Карта</button>
+          <button class="tab" data-tab="timerview" role="tab" aria-selected="false">Таймеры</button>
+          <button class="tab" data-tab="historyview" role="tab" aria-selected="false">Журнал</button>
+        </div>
+
+        <section id="mapview" aria-label="Карта поля боя">
+          <div class="panel">
+            <div class="row">
+              <h2>Поле боя</h2>
+              <span class="muted">Нажми на карту, чтобы отметить врага</span>
+            </div>
+            <div class="map" id="map" aria-label="Схематическая карта">
+              <div class="lane l1"></div>
+              <div class="lane l2"></div>
+              <div class="lane l3"></div>
+              <div class="river"></div>
+              <div class="base"></div>
+              <div class="base enemy"></div>
+              <div class="object turtle">🐢</div>
+              <div class="object lord">🐉</div>
+            </div>
+            <p class="hint">Схематичная карта для ручных отметок. Это не подключение к игре и не считывание данных из матча.</p>
+            <div class="actions">
+              <button id="undo" class="secondary">Отменить отметку</button>
+              <button id="clear" class="danger">Очистить карту</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Последние отметки</h2>
+            <div id="recent" class="muted">Пока отметок нет.</div>
+          </div>
+        </section>
+
+        <section id="timerview" class="hidden" aria-label="Таймеры боевых объектов">
+          <div class="panel">
+            <h2>Объекты</h2>
+            <div class="timergrid">
+              <div class="timerbox">
+                <div>🐢 Turtle</div>
+                <div class="timer" id="turtleTime">—:—</div>
+                <div class="muted" id="turtleState">Не запущен</div>
+                <div class="actions">
+                  <button onclick="startTimer('turtle', 600)">Старт</button>
+                  <button class="secondary" onclick="resetTimer('turtle')">Сброс</button>
+                </div>
+              </div>
+
+              <div class="timerbox">
+                <div>🐉 Lord</div>
+                <div class="timer" id="lordTime">—:—</div>
+                <div class="muted" id="lordState">Не запущен</div>
+                <div class="actions">
+                  <button onclick="startTimer('lord', 900)">Старт</button>
+                  <button class="secondary" onclick="resetTimer('lord')">Сброс</button>
+                </div>
+              </div>
+            </div>
+            <p class="hint">Стартуй таймер вручную после появления объекта. Время можно настроить ниже.</p>
+          </div>
+
+          <div class="panel">
+            <h2>Настройка длительности</h2>
+            <div class="settings">
+              <label for="turtleDuration">Turtle, секунд <input id="turtleDuration" type="number" min="10" value="600"></label>
+              <label for="lordDuration">Lord, секунд <input id="lordDuration" type="number" min="10" value="900"></label>
+            </div>
+          </div>
+        </section>
+
+        <section id="historyview" class="hidden" aria-label="Журнал событий">
+          <div class="panel">
+            <div class="row">
+              <h2>Журнал событий</h2>
+              <button class="secondary" id="clearlog">Очистить</button>
+            </div>
+            <div id="log">Событий пока нет.</div>
+          </div>
+        </section>
+      </section>
+
+      <section id="install" class="panel" style="margin-top: 26px;">
+        <h2>Добавить на главный экран iPhone</h2>
+        <p class="lead" style="font-size: 0.96rem; margin: 0; color: var(--muted);">
+          Откройте ссылку в Safari, нажмите кнопку «Поделиться» → «На экран Домой» → «Добавить». После этого сайт будет запускаться как приложение, а Service Worker и PWA-режим будут работать только через HTTPS или localhost.
+        </p>
+      </section>
+    </main>
+
+    <footer>Неофициальный фанатский инструмент. Не связан с Moonton.</footer>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let marks = [];
+    let timers = { turtle: null, lord: null };
+    let events = [];
+
+    function log(msg) {
+      events.unshift(new Date().toLocaleTimeString('ru-RU') + ' — ' + msg);
+      events = events.slice(0, 100);
+      $('log').innerHTML = events.map(x => '<div class="logitem">' + x + '</div>').join('');
+    }
+
+    document.querySelectorAll('.tab').forEach(button => {
+      button.onclick = () => {
+        document.querySelectorAll('.tab').forEach(tab => {
+          const active = tab === button;
+          tab.classList.toggle('active', active);
+          tab.setAttribute('aria-selected', String(active));
+        });
+
+        ['mapview', 'timerview', 'historyview'].forEach(id => {
+          const section = $(id);
+          if (section) section.classList.toggle('hidden', id !== button.dataset.tab);
+        });
+      };
+    });
+
+    $('map').addEventListener('click', e => {
+      if (e.target.closest('.object')) return;
+      const r = $('map').getBoundingClientRect();
+      const m = {
+        x: (e.clientX - r.left) / r.width * 100,
+        y: (e.clientY - r.top) / r.height * 100,
+        t: new Date().toLocaleTimeString('ru-RU')
+      };
+
+      marks.push(m);
+      marks = marks.slice(-12);
+      renderMarks();
+      log('Новая отметка на карте');
+    });
+
+    function renderMarks() {
+      document.querySelectorAll('.marker').forEach(el => el.remove());
+      marks.forEach((m, i) => {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.textContent = '!';
+        el.style.left = m.x + '%';
+        el.style.top = m.y + '%';
+        el.title = m.t;
+        $('map').appendChild(el);
+      });
+
+      $('recent').textContent = marks.length ? marks.slice().reverse().map(m => `${m.t} · ${m.x.toFixed(0)}% / ${m.y.toFixed(0)}%`).join(' · ') : 'Пока отметок нет.';
+    }
+
+    $('undo').onclick = () => {
+      marks.pop();
+      renderMarks();
+      log('Отменена последняя отметка');
+    };
+
+    $('clear').onclick = () => {
+      marks = [];
+      renderMarks();
+      log('Отметки очищены');
+    };
+
+    function startTimer(name, defaultSeconds) {
+      const input = $(name + 'Duration');
+      const seconds = Math.max(10, Number(input.value) || defaultSeconds);
+      timers[name] = { end: Date.now() + seconds * 1000 };
+      log((name === 'turtle' ? 'Turtle' : 'Lord') + ' запущен');
+    }
+
+    function resetTimer(name) {
+      timers[name] = null;
+      $(name + 'Time').textContent = '—:—';
+      $(name + 'State').textContent = 'Не запущен';
+      log('Сброшен таймер ' + name);
+    }
+
+    function tick() {
+      for (const name of ['turtle', 'lord']) {
+        const timer = timers[name];
+        if (!timer) continue;
+
+        const left = Math.max(0, Math.ceil((timer.end - Date.now()) / 1000));
+        const min = String(Math.floor(left / 60)).padStart(2, '0');
+        const sec = String(left % 60).padStart(2, '0');
+        $(name + 'Time').textContent = min + ':' + sec;
+
+        if (left === 0) {
+          $(name + 'State').textContent = 'Готово';
+          log((name === 'turtle' ? 'Turtle' : 'Lord') + ' готов');
+          timers[name] = null;
+        } else {
+          $(name + 'State').textContent = 'Идёт';
+        }
+      }
+    }
+
+    setInterval(tick, 250);
+
+    $('clearlog').onclick = () => {
+      events = [];
+      $('log').textContent = 'Событий пока нет.';
+    };
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    renderMarks();
+    log('Приложение запущено');
+  </script>
+</body>
+</html>
